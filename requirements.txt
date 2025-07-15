@@ -6,4 +6,6 @@ scikit-image
 numpy
 apache-airflow
 apache-airflow-providers-docker
+apache-airflow-providers-amazon
 pyspark
+boto3

@@ -1,9 +1,31 @@
-
 import torch
 import torchvision
 import torchxrayvision as xrv
 import skimage.io
 import numpy as np
+import argparse
+import boto3
+import os
+from urllib.parse import urlparse
+
+def download_from_s3(s3_path: str, local_dir: str = "/tmp/data") -> str:
+    """
+    Downloads a file from an S3 path to a local directory.
+    """
+    if not os.path.exists(local_dir):
+        os.makedirs(local_dir)
+    
+    parsed_url = urlparse(s3_path)
+    bucket_name = parsed_url.netloc
+    object_key = parsed_url.path.lstrip('/')
+    
+    file_name = os.path.basename(object_key)
+    local_path = os.path.join(local_dir, file_name)
+    
+    s3 = boto3.client('s3')
+    print(f"Downloading s3://{bucket_name}/{object_key} to {local_path}")
+    s3.download_file(bucket_name, object_key, local_path)
+    return local_path
 
 def run_inference(image_path: str) -> dict:
     """
@@ -43,19 +65,18 @@ def run_inference(image_path: str) -> dict:
     return output
 
 if __name__ == "__main__":
-    # This allows the script to be run directly for testing
-    # We will download the image to the data directory
-    import urllib.request
-    import os
+    parser = argparse.ArgumentParser(description="Run X-Ray inference on an image from S3.")
+    parser.add_argument("--image_path", type=str, required=True, help="The S3 path to the image (e.g., s3://bucket/key.jpg)")
+    args = parser.parse_args()
 
-    if not os.path.exists("data"):
-        os.makedirs("data")
-
-    img_url = "https://huggingface.co/spaces/torchxrayvision/torchxrayvision-classifier/resolve/main/16747_3_1.jpg"
-    img_path = "data/xray.jpg"
-    
-    if not os.path.exists(img_path):
-        urllib.request.urlretrieve(img_url, img_path)
-    
-    results = run_inference(img_path)
-    print(results)
+    # Download the image from S3 to a temporary local path
+    try:
+        local_image_path = download_from_s3(args.image_path)
+        results = run_inference(local_image_path)
+        print("Inference Results:")
+        print(results)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        # Clean up the downloaded file if it exists
+        if 'local_image_path' in locals() and os.path.exists(local_image_path):
+            os.remove(local_image_path)
