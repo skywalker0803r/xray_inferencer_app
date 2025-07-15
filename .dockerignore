@@ -1,0 +1,24 @@
+
+# Ignore Python virtual environments
+.venv
+venv
+env
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore IDE and editor specific files
+.idea/
+.vscode/
+
+# Ignore build artifacts
+build/
+dist/
+*.egg-info/
+
+# Ignore local data and notebooks
+/data
+/notebooks

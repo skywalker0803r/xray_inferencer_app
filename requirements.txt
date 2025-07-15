@@ -1,0 +1,9 @@
+
+torch
+torchvision
+torchxrayvision
+scikit-image
+numpy
+apache-airflow
+apache-airflow-providers-docker
+pyspark
